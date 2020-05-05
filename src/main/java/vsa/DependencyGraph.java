@@ -5,6 +5,9 @@ import soot.ValueBox;
 import soot.Unit;
 import soot.toolkits.graph.UnitGraph;
 
+import java.util.Map;
+import java.util.HashMap;
+
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Iterator;
@@ -14,6 +17,9 @@ import org.jgrapht.*;
 import org.jgrapht.graph.*;
 
 public class DependencyGraph {
+    public Map<HashSet<Unit>, DirectedPseudograph<Unit, DefaultEdge>> results;
+    public Set<Unit> mb;
+
     private UnitGraph local_graph;
     private Unit initialUnit;
     private Local var;
@@ -38,7 +44,11 @@ public class DependencyGraph {
         this.initialUnit = initialUnit;
         this.var = var;
 
+        results = new HashMap();
+        mb = new HashSet();
+
         analysis();
+        obtain_mb();
     }
 
     void analysis() {
@@ -59,8 +69,6 @@ public class DependencyGraph {
             Iterator it = worklist.iterator();
             Node cur_node = (Node) it.next();
             it.remove();
-
-            System.out.println(cur_node.unit);
 
             ArrayList<Local> vs = cur_node.vs; 
             HashSet<Unit> d = cur_node.d;
@@ -83,7 +91,11 @@ public class DependencyGraph {
                 d.add(cur_node.unit);
 
                 if (vs.size() == 0) {
-                    // TODO
+                    // copy graph
+                    DirectedPseudograph<Unit, DefaultEdge> new_graph = 
+                        (DirectedPseudograph<Unit, DefaultEdge>)
+                         ((AbstractBaseGraph)cur_node.graph).clone();
+                    results.put(d, new_graph);
                     continue;
                 }
             }
@@ -98,7 +110,7 @@ public class DependencyGraph {
                 // add edges to previous
                 new_graph.addVertex(cur_node.unit);
                 new_graph.addVertex(unit);
-                new_graph.addEdge(cur_node.unit, unit);
+                new_graph.addEdge(unit, cur_node.unit);
 
                 worklist.add(new Node(unit, vs, d, new_graph));
             }
@@ -127,5 +139,41 @@ public class DependencyGraph {
             }
         }
         return vsu;
+    }
+
+    void obtain_mb() {
+        ArrayList<Set<Unit>> list = new 
+            ArrayList(results.keySet());
+
+        for (int i = 0; i < list.size(); i++) {
+            for (int j = i + 1; j < list.size(); j++) {
+                Set<Unit> not_common = new HashSet<Unit>();
+            
+                // obtain not common nodes in i
+                for (Unit node : list.get(i)) {
+                    if (!list.get(j).contains(node)) {
+                        not_common.add(node);
+                    }
+                }
+
+                System.out.println("Iteration");
+                System.out.println(not_common);
+                boolean found = false;
+                // find parent of i
+                for (Unit node : not_common) {
+                    if (!found) {
+                        for (Unit successor : Graphs.successorListOf(
+                            results.get(list.get(i)), node)) {
+                            System.out.println(results.get(list.get((i))));
+                            System.out.println(successor);
+                            if (!found && !not_common.contains(successor)) {
+                                mb.add(successor);
+                                found = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
