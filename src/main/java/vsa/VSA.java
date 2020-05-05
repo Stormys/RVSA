@@ -20,6 +20,7 @@ import soot.jimple.DivExpr;
 import soot.jimple.AddExpr;
 import soot.jimple.SubExpr;
 import soot.jimple.IntConstant;
+import soot.jimple.ArrayRef;
 import soot.Value;
 
 
@@ -29,6 +30,7 @@ public class VSA extends ForwardFlowAnalysis {
     private Set<Local> locals = new HashSet<>();
 
     private Context ctx;
+    private UnitGraph graph;
 
     VSA(UnitGraph graph) {
         this(graph, null, null);
@@ -36,6 +38,7 @@ public class VSA extends ForwardFlowAnalysis {
 
     VSA(UnitGraph graph, Context ctx, Sigma sigma_i) {
         super(graph);
+        this.graph = graph;
         this.ctx = ctx;
         sigmaAt = new HashMap<>(graph.size() * 2 + 1);
 
@@ -56,6 +59,21 @@ public class VSA extends ForwardFlowAnalysis {
         }
         
         doAnalysis();
+
+        refine_vsa();
+    }
+
+    private void refine_vsa() {
+        for (Unit u : sigmaAt.keySet()) {
+            Sigma sigma = sigmaAt.get(u);
+    
+            for (ValueBox vb : u.getUseBoxes()) {
+                if (vb.getValue() instanceof ArrayRef) {
+                    Local var = (Local) ((ArrayRef) vb.getValue()).getIndex();
+                    new DependencyGraph(graph, var, u);
+                }
+            }
+        }
     }
 
     private L extract_sigma(soot.Value op, Sigma sigma) {
