@@ -7,6 +7,8 @@ import soot.toolkits.graph.DominatorsFinder;
 import soot.toolkits.graph.MHGDominatorsFinder;
 import soot.toolkits.graph.UnitGraph;
 import soot.toolkits.scalar.ForwardFlowAnalysis;
+import soot.NormalUnitPrinter;
+import soot.jimple.Stmt;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -60,7 +62,25 @@ public class VSA extends ForwardFlowAnalysis {
         
         doAnalysis();
 
+        print_results();
         refine_vsa();
+    }
+
+    void print_results() {
+        System.out.println("Normal VSA");
+        System.out.println("-----------------------------------------------");
+        NormalUnitPrinter printer = new NormalUnitPrinter(graph.getBody());
+        for (Unit unit: graph.getBody().getUnits()) {
+            if (sigmaAt.containsKey(unit)) {
+                Stmt stmt = (Stmt) unit;
+                System.out.print(stmt.getClass() + ": ");
+                stmt.toString(printer);
+                System.out.println(printer.output());
+                printer.output().setLength(0);
+                System.out.println("\t" + sigmaAt.get(stmt).toString());
+            }
+        }
+        System.out.println();
     }
 
     private void refine_vsa() {

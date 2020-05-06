@@ -19,19 +19,6 @@ public class VSAnalysisTransformer extends BodyTransformer {
     @Override
     protected void internalTransform(Body body, String phaseName, Map<String, 
                                      String> options) {
-
-/*        System.out.println("-----------------------------------------------");
-        NormalUnitPrinter printer = new NormalUnitPrinter(body); */
         VSA analysis = new VSA(new ExceptionalUnitGraph(body));
-
-        /*for (Unit unit: body.getUnits()) {
-            Stmt stmt = (Stmt) unit;
-            System.out.print(stmt.getClass() + ": ");
-            stmt.toString(printer);
-            System.out.println(printer.output());
-            printer.output().setLength(0);
-            System.out.println("\t" + analysis.sigmaAt.get(stmt).toString());
-        }*/
-
     }
 }

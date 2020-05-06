@@ -10,7 +10,7 @@ import soot.options.Options;
 
 public class VSAnalysisTest extends AnalysisTest {
     void add_analysis() {
-        analysisName = VSAnalysisTransformer.ANALYSIS_NAME;
+        analysisName = "jap.Demo";
         PackManager.v().getPack("jap").add(
                 new Transform(analysisName,
                         VSAnalysisTransformer.getInstance())
@@ -19,8 +19,9 @@ public class VSAnalysisTest extends AnalysisTest {
     }
 
     @Test
-    public void testVSAnalysis() {
-        addTestClass("inputs.Test1");
+    public void Demo() {
+        System.out.println();
+        addTestClass("inputs.Demo");
         Main.main(getArgs());
     }
 }

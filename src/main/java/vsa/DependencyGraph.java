@@ -172,7 +172,7 @@ public class DependencyGraph {
                         for (Unit successor : Graphs.successorListOf(
                             results.get(list.get(i)), node)) {
                             if (!found && !not_common.contains(successor)) {
-                                mb.add(successor);
+                                mb.add(node);
                                 found = true;
                             }
                         }
@@ -182,3 +182,4 @@ public class DependencyGraph {
         }
     }
 }
+

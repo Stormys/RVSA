@@ -50,6 +50,7 @@ public class RVSA {
     private UnitGraph graph;
     private DependencyGraph dgraph;
     private Local orig_var; 
+    private Unit orig_unit;
     private Map<Unit, Sigma> orig_sigmaAt;
     private Map<Unit, Set<State>> sigmaAt;
 
@@ -57,20 +58,25 @@ public class RVSA {
         this.graph = graph;
         this.orig_var = orig_var;
         this.orig_sigmaAt = sigmaAt;
+        this.orig_unit = unit;
 
+        System.out.println("Attempted refining: " + orig_var + " in " + orig_unit);
+        System.out.println("-----------------------------------------------");
         dgraph = new DependencyGraph(graph, orig_var, unit);
+        System.out.println("Number of dependency graphs: " + dgraph.results.size());
+
         this.sigmaAt = new HashMap();
 
         if (dgraph.final_graph != null) {
-            System.out.println(dgraph.mb);
             analysis();
             print_results();
         }
+        System.out.println("-----------------------------------------------");
+        System.out.println();
+        
     }
 
     void print_results() {
-        System.out.println("Refined VSA");
-        System.out.println("-----------------------------------------------");
         NormalUnitPrinter printer = new NormalUnitPrinter(graph.getBody());
         for (Unit unit: graph.getBody().getUnits()) {
             if (sigmaAt.containsKey(unit)) {
@@ -108,18 +114,14 @@ public class RVSA {
             Unit cur_unit = (Unit) it.next();
             it.remove();
 
-            System.out.println("ITERATIon");
-            System.out.println(cur_unit);
             for (State state : sigmaAt.get(cur_unit)) {
                 State new_state = do_analysis(cur_unit, state); 
                 if (dgraph.mb.contains(cur_unit)) {
                     new_state.mb.add(cur_unit);
                 }
-                System.out.println("MB: " + new_state.mb);
 
                 // add successors to worklist
                 for (Unit succ : graph.getSuccsOf(cur_unit)) {
-                    System.out.println("SUCC: " +  succ);
                     if(dgraph.final_graph.containsVertex(succ)) {
                         if (!sigmaAt.containsKey(succ)) {
                             sigmaAt.put(succ, new HashSet<State>());
@@ -213,12 +215,12 @@ public class RVSA {
             if (!merged && state.mb.equals(new_state.mb)) {
                 merged = true;
                 for (Local local: state.output_state.map.keySet()) {
-                    L val1 = state.output_state.map.get(local);
+/*                    L val1 = state.output_state.map.get(local);
                     L val2 = new_state.output_state.map.get(local);
 
                    state.output_state.map.put(local, 
                                               new L(Math.min(val1.min, val2.min), 
-                                                  Math.max(val1.max, val2.max)));
+                                                  Math.max(val1.max, val2.max))); */
                 }
                 new_states.add(state);
             } else {
