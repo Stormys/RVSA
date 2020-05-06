@@ -70,7 +70,7 @@ public class VSA extends ForwardFlowAnalysis {
             for (ValueBox vb : u.getUseBoxes()) {
                 if (vb.getValue() instanceof ArrayRef) {
                     Local var = (Local) ((ArrayRef) vb.getValue()).getIndex();
-                    new DependencyGraph(graph, var, u);
+                    new RVSA(graph, u, var, sigmaAt);
                 }
             }
         }

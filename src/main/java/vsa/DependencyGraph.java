@@ -18,6 +18,7 @@ import org.jgrapht.graph.*;
 
 public class DependencyGraph {
     public Map<HashSet<Unit>, DirectedPseudograph<Unit, DefaultEdge>> results;
+    public AsGraphUnion<Unit, DefaultEdge> final_graph;
     public Set<Unit> mb;
 
     private UnitGraph local_graph;
@@ -49,6 +50,14 @@ public class DependencyGraph {
 
         analysis();
         obtain_mb();
+
+        ArrayList<DirectedPseudograph> list = new ArrayList(results.values());
+        if (list.size() > 1) {
+            final_graph = new AsGraphUnion(list.get(0), list.get(1));
+        }
+        for (int i = 2; i < list.size(); i++) {
+            final_graph = new AsGraphUnion(list.get(i), final_graph);
+        }
     }
 
     void analysis() {
@@ -156,16 +165,12 @@ public class DependencyGraph {
                     }
                 }
 
-                System.out.println("Iteration");
-                System.out.println(not_common);
                 boolean found = false;
                 // find parent of i
                 for (Unit node : not_common) {
                     if (!found) {
                         for (Unit successor : Graphs.successorListOf(
                             results.get(list.get(i)), node)) {
-                            System.out.println(results.get(list.get((i))));
-                            System.out.println(successor);
                             if (!found && !not_common.contains(successor)) {
                                 mb.add(successor);
                                 found = true;

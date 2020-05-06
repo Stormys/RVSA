@@ -18,7 +18,7 @@ dependencies {
     testImplementation group: 'ca.mcgill.sable', name: 'soot', version: '4.0.0'
     implementation group: 'ca.mcgill.sable', name: 'soot', version: '4.0.0'
     testImplementation group: 'org.slf4j', name: 'slf4j-simple', version: '1.6.1'
-    def jgraphtVersion = '0.9.1'
+    def jgraphtVersion = '1.4.0'
     compile "org.jgrapht:jgrapht-core:$jgraphtVersion"
 }
 
