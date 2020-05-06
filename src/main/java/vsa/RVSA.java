@@ -22,7 +22,7 @@ import soot.jimple.ArrayRef;
 import soot.Value;
 
 public class RVSA {
-   private class State {
+   private class State implements Cloneable {
         Set<Unit> mb;
         Sigma input_state;
         Sigma output_state;
@@ -33,8 +33,17 @@ public class RVSA {
 
             this.mb = new HashSet();
         }
+
         public String toString() {
             return output_state.toString();           
+        }
+
+        public Object clone() {
+            State clone = new State(new Sigma());
+            input_state.copy(clone.input_state); 
+            output_state.copy(clone.output_state); 
+            clone.mb = new HashSet(this.mb);
+            return clone;
         }
   }
    
@@ -53,6 +62,7 @@ public class RVSA {
         this.sigmaAt = new HashMap();
 
         if (dgraph.final_graph != null) {
+            System.out.println(dgraph.mb);
             analysis();
             print_results();
         }
@@ -98,21 +108,27 @@ public class RVSA {
             Unit cur_unit = (Unit) it.next();
             it.remove();
 
+            System.out.println("ITERATIon");
+            System.out.println(cur_unit);
             for (State state : sigmaAt.get(cur_unit)) {
                 State new_state = do_analysis(cur_unit, state); 
                 if (dgraph.mb.contains(cur_unit)) {
                     new_state.mb.add(cur_unit);
                 }
+                System.out.println("MB: " + new_state.mb);
 
                 // add successors to worklist
                 for (Unit succ : graph.getSuccsOf(cur_unit)) {
+                    System.out.println("SUCC: " +  succ);
                     if(dgraph.final_graph.containsVertex(succ)) {
                         if (!sigmaAt.containsKey(succ)) {
                             sigmaAt.put(succ, new HashSet<State>());
-                            sigmaAt.get(succ).add(new State(new_state.input_state));
+                            sigmaAt.get(succ).add((State) new_state.clone());
                             worklist.add(succ);
                         } else {
-                            sigmaAt.get(succ).add(new State(new_state.input_state));
+                            sigmaAt.put(succ, 
+                                        conditional_merge((State) new_state.clone(), 
+                                                          sigmaAt.get(succ)));
                             worklist.add(succ);
                         }
                     }
@@ -171,7 +187,12 @@ public class RVSA {
                 }
             }
         }
-        return new State(state.output_state);
+        
+        // generate result state
+        State result = new State(new Sigma());
+        state.output_state.copy(result.input_state); 
+        result.mb = new HashSet(state.mb);
+        return result;
     }
     
     private L extract_sigma(soot.Value op, Sigma sigma) {
@@ -182,5 +203,32 @@ public class RVSA {
             return sigma.map.get((Local) op);
         }
         return new L(state.Top);
+    }
+
+    private Set<State> conditional_merge(State new_state, Set<State> old_states) {
+        Set<State> new_states = new HashSet<State>();
+        boolean merged = false;
+
+        for (State state : old_states) {
+            if (!merged && state.mb.equals(new_state.mb)) {
+                merged = true;
+                for (Local local: state.output_state.map.keySet()) {
+                    L val1 = state.output_state.map.get(local);
+                    L val2 = new_state.output_state.map.get(local);
+
+                   state.output_state.map.put(local, 
+                                              new L(Math.min(val1.min, val2.min), 
+                                                  Math.max(val1.max, val2.max)));
+                }
+                new_states.add(state);
+            } else {
+                new_states.add(state);
+            }
+        }
+
+        if (!merged) {
+            new_states.add(new_state);
+        }
+        return new_states;
     }
 }
