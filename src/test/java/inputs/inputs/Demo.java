@@ -19,23 +19,6 @@ public class Demo {
         ignore = array[z]; // Should always be 30
     }
 
-    public static void just_wrong() {
-        int[] array = new int[5];
-        int a, x, y, z;
-        int ignore; 
-
-        x = 10;
-        a = 1;
-
-        if (condition()) {
-            y = 4;
-        } else {
-            y = 5;
-        }
-
-        z = x + a;
-        ignore = array[z]; // Always 11, RVSA should do nothing
-    }
 
     public static void demo_3() {
         int[] array = new int[20];
@@ -64,6 +47,23 @@ public class Demo {
         ignore = array[z];
     }
 
+    public static void just_wrong() {
+        int[] array = new int[5];
+        int a, x, y, z;
+        int ignore; 
+
+        x = 10;
+        a = 1;
+
+        if (condition()) {
+            y = 4;
+        } else {
+            y = 5;
+        }
+
+        z = x + a;
+        ignore = array[z]; // Always 11, RVSA should do nothing
+    }
     public static boolean condition() {
         return false;
     }
